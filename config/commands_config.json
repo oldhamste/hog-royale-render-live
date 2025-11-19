@@ -1,39 +1,70 @@
 {
-  "chatCommands": [
+  "commands": [
     {
-      "name": "weapon",
-      "trigger": "!weapon",
-      "effect": "Assign random weapon"
+      "id": "play",
+      "syntax": "!play",
+      "aliases": ["!join", "!queue"],
+      "description": "Join the queue for the next Hog Royale match."
     },
     {
-      "name": "boost",
-      "trigger": "!boost",
-      "effect": "Short dash forward"
+      "id": "leave",
+      "syntax": "!leave",
+      "aliases": ["!quit", "!l"],
+      "description": "Leave the Hog Royale queue."
     },
     {
-      "name": "jump",
-      "trigger": "!jump",
-      "effect": "High bounce"
+      "id": "points",
+      "syntax": "!points",
+      "aliases": ["!score", "!p"],
+      "description": "Show how many Hog Points you currently have."
     },
     {
-      "name": "taunt",
-      "trigger": "!taunt",
-      "effect": "AI voice + taunt animation"
+      "id": "boost",
+      "syntax": "!boost",
+      "aliases": [],
+      "description": "Use a speed boost if available."
     },
     {
-      "name": "target",
-      "trigger": "!target",
-      "effect": "Focus another user for 5s"
+      "id": "explode",
+      "syntax": "!explode",
+      "aliases": ["!boom"],
+      "description": "Triggers your special explosion ability."
     },
     {
-      "name": "random",
-      "trigger": "!random",
-      "effect": "Random good/bad effect"
+      "id": "hog",
+      "syntax": "!hog",
+      "aliases": ["!class"],
+      "description": "Shows your current hog class."
+    },
+    {
+      "id": "sethog",
+      "syntax": "!sethog <class>",
+      "aliases": ["!pickhog"],
+      "description": "Choose one of the available hog classes."
+    },
+    {
+      "id": "help",
+      "syntax": "!help",
+      "aliases": ["!commands"],
+      "description": "Show all available commands."
+    },
+    {
+      "id": "giftinfo",
+      "syntax": "!giftinfo",
+      "aliases": ["!gifts"],
+      "description": "Show all gift power-up effects."
+    },
+    {
+      "id": "stats",
+      "syntax": "!stats",
+      "aliases": ["!profile"],
+      "description": "Show full player stats including points, games played and win rate."
+    },
+    {
+      "id": "top",
+      "syntax": "!top",
+      "aliases": ["!leaderboard"],
+      "description": "Show the top 5 players by points."
     }
-  ],
-  "system": {
-    "join": "Spawn hog for viewer",
-    "follow": "Armour buff",
-    "share": "Next spawn speed boost"
-  }
+  ]
 }
