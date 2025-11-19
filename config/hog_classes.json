@@ -1,0 +1,28 @@
+{
+  "classes": [
+    {
+      "id": "bruiser",
+      "name": "Bruiser"
+    },
+    {
+      "id": "sharpshooter",
+      "name": "Sharpshooter"
+    },
+    {
+      "id": "demolitionist",
+      "name": "Demolitionist"
+    },
+    {
+      "id": "trickster",
+      "name": "Trickster"
+    },
+    {
+      "id": "tank",
+      "name": "Tank"
+    },
+    {
+      "id": "speedster",
+      "name": "Speedster"
+    }
+  ]
+}

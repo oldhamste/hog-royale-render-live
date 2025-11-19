@@ -1,0 +1,39 @@
+{
+  "chatCommands": [
+    {
+      "name": "weapon",
+      "trigger": "!weapon",
+      "effect": "Assign random weapon"
+    },
+    {
+      "name": "boost",
+      "trigger": "!boost",
+      "effect": "Short dash forward"
+    },
+    {
+      "name": "jump",
+      "trigger": "!jump",
+      "effect": "High bounce"
+    },
+    {
+      "name": "taunt",
+      "trigger": "!taunt",
+      "effect": "AI voice + taunt animation"
+    },
+    {
+      "name": "target",
+      "trigger": "!target",
+      "effect": "Focus another user for 5s"
+    },
+    {
+      "name": "random",
+      "trigger": "!random",
+      "effect": "Random good/bad effect"
+    }
+  ],
+  "system": {
+    "join": "Spawn hog for viewer",
+    "follow": "Armour buff",
+    "share": "Next spawn speed boost"
+  }
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hog Royale Live Events</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <h1>Hog Royale – Live Events</h1>
+        <div id="status">Connecting…</div>
+      </header>
+
+      <main>
+        <section>
+          <h2>Config Loaded</h2>
+          <pre id="config"></pre>
+        </section>
+
+        <section>
+          <h2>TikTok Events</h2>
+          <button id="test-btn">Trigger Test Event</button>
+          <ul id="events"></ul>
+        </section>
+      </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>

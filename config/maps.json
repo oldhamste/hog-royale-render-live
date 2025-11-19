@@ -1,0 +1,24 @@
+{
+  "maps": [
+    {
+      "id": "hog_hill_warzone",
+      "name": "Hog Hill Warzone"
+    },
+    {
+      "id": "scrapyard_showdown",
+      "name": "Scrapyard Showdown"
+    },
+    {
+      "id": "city_rooftop_rumble",
+      "name": "City Rooftop Rumble"
+    },
+    {
+      "id": "trench_valley",
+      "name": "Trench Valley"
+    },
+    {
+      "id": "fortress_siege",
+      "name": "Fortress Siege"
+    }
+  ]
+}

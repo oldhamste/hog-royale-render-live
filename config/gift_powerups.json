@@ -1,0 +1,34 @@
+{
+  "common": [
+    {
+      "gift": "Rose",
+      "effect": "Small explosion, pushback, +5 armour"
+    },
+    {
+      "gift": "Any_1_Coin",
+      "effect": "+10% damage 5s, glow, AI voice"
+    }
+  ],
+  "big": [
+    {
+      "gift": "GG/HandHeart/Perfume/Cap",
+      "effect": "Teleport to safe zone, +50% HP, shockwave"
+    },
+    {
+      "gift": "Lion/SportsCar/Superpower",
+      "effect": "Full-health respawn, max armour, special weapon, camera focus"
+    }
+  ],
+  "massive": [
+    {
+      "gift": "TreasureBox/Castle/Rocket",
+      "effect": "Full-map airstrike, sender immune 5s, camera shake"
+    }
+  ],
+  "ultra": [
+    {
+      "gift": "Universe",
+      "effect": "Arena wipe, sender survives, 10s chaos mode"
+    }
+  ]
+}
