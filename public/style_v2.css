@@ -1,158 +1,173 @@
 body {
-    background: #0c0c0c;
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    color: white;
+  background: #0c0c0c;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  color: #ffffff;
 }
 
 #app-container {
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    padding: 20px;
-    gap: 20px;
-    box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  padding: 20px;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
 /* LEFT PANEL */
 #left-panel {
-    width: 35%;
-    background: #111;
-    border-radius: 10px;
-    padding: 20px;
-    overflow-y: auto;
+  width: 35%;
+  background: #111111;
+  border-radius: 10px;
+  padding: 20px;
+  overflow-y: auto;
 }
 
 .title {
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 26px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 26px;
 }
 
 .block {
-    background: #171717;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 20px;
+  background: #171717;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
 }
 
 .block h2 {
-    margin-top: 0;
-    margin-bottom: 10px;
+  margin: 0 0 10px 0;
 }
 
 ul {
-    padding-left: 15px;
+  padding-left: 15px;
 }
 
 .command-syntax {
-    font-weight: bold;
-    color: #00eaff;
-    margin-right: 5px;
+  font-weight: bold;
+  color: #00eaff;
+  margin-right: 5px;
 }
 
 /* RIGHT PANEL */
 #right-panel {
-    width: 65%;
-    background: #111;
-    border-radius: 10px;
-    padding: 20px;
-    overflow-y: auto;
+  width: 65%;
+  background: #111111;
+  border-radius: 10px;
+  padding: 20px;
+  overflow-y: auto;
 }
 
 #events-list {
-    height: 350px;
-    overflow-y: auto;
+  height: 350px;
+  overflow-y: auto;
 }
 
 .event-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 6px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .event-kind {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .event-kind.command {
-    color: #49ff00;
+  color: #49ff00;
 }
 
 .event-kind.gift {
-    color: #ffc400;
+  color: #ffc400;
 }
 
 .event-kind.chat {
-    color: #61a0ff;
+  color: #61a0ff;
 }
 
 #queue-list {
-    list-style: none;
-    padding-left: 5px;
+  list-style: none;
+  padding-left: 5px;
 }
 
 .tag {
-    background: #303030;
-    padding: 5px 10px;
-    border-radius: 6px;
-    margin-bottom: 5px;
-    display: inline-block;
+  background: #303030;
+  padding: 5px 10px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  display: inline-block;
 }
 
 #queue-empty {
-    opacity: .6;
-    font-style: italic;
+  opacity: 0.6;
+  font-style: italic;
 }
 
 /* Popups */
 #popup-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 320px;
-    z-index: 999;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  z-index: 999;
 }
 
 .popup {
-    background: #222;
-    border-left: 6px solid #00d1ff;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    animation: popupSlide 0.6s ease, popupFade 4.5s ease forwards;
+  background: #222222;
+  border-left: 6px solid #00d1ff;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  animation: popupSlide 0.6s ease, popupFade 4.5s ease forwards;
 }
 
-.popup.queue { border-left-color: #49ff00; }
-.popup.points { border-left-color: #1ecbff; }
-.popup.gift { border-left-color: #ffc400; }
+.popup.queue {
+  border-left-color: #49ff00;
+}
+.popup.points {
+  border-left-color: #1ecbff;
+}
+.popup.gift {
+  border-left-color: #ffc400;
+}
 
 .popup-title {
-    font-weight: bold;
-    margin-bottom: 4px;
+  font-weight: bold;
+  margin-bottom: 4px;
 }
 
 @keyframes popupSlide {
-    from { opacity: 0; transform: translateX(50px); }
-    to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes popupFade {
-    from { opacity: 1; }
-    to   { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 .test-btn {
-    width: 100%;
-    padding: 10px;
-    background: #0094ff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+  width: 100%;
+  padding: 10px;
+  background: #0094ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .test-btn:hover {
-    background: #007bd1;
+  background: #007bd1;
 }
