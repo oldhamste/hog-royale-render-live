@@ -1,33 +1,61 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
     <meta charset="UTF-8" />
-    <title>Hog Royale Live Events</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hog Royale – Live Overlay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/style.css" />
-  </head>
-  <body>
-    <div class="app">
-      <header>
-        <h1>Hog Royale – Live Events</h1>
-        <div id="status">Connecting…</div>
-      </header>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div id="overlay-root">
+        <div class="left-column">
+            <div class="brand-block">
+                <div class="brand-title">HOG ROYALE</div>
+                <div class="brand-subtitle">TikTok Live Control</div>
+            </div>
 
-      <main>
-        <section>
-          <h2>Config Loaded</h2>
-          <pre id="config"></pre>
-        </section>
+            <div class="panel">
+                <div class="panel-title">Commands</div>
+                <ul id="commands-list" class="panel-list">
+                    <!-- Filled by client.js using /config -->
+                </ul>
+            </div>
 
-        <section>
-          <h2>TikTok Events</h2>
-          <button id="test-btn">Trigger Test Event</button>
-          <ul id="events"></ul>
-        </section>
-      </main>
+            <div class="panel">
+                <div class="panel-title">Map & Match</div>
+                <div id="map-info" class="panel-body small">
+                    Loading map info…
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="panel queue-panel">
+                <div class="panel-title">Queue for Next Match</div>
+                <div id="queue-empty" class="muted small">
+                    Nobody in queue yet. Viewers use <span class="pill">!play</span> to join.
+                </div>
+                <ul id="queue-list" class="tag-list">
+                    <!-- Filled with players who use !play -->
+                </ul>
+            </div>
+
+            <div class="panel events-panel">
+                <div class="panel-title">Live Events</div>
+                <div id="events-list" class="events-list">
+                    <!-- Live TikTok events appear here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Corner popups -->
+        <div id="popup-container"></div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Optional debug button -->
+    <button id="trigger-test" class="test-button">Trigger Test Event</button>
+
     <script src="/client.js"></script>
-  </body>
+</body>
 </html>
