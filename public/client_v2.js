@@ -1,278 +1,372 @@
-// Hog Royale Overlay v2 client
-// - Connects to /events (SSE) for TikTok events
-// - Fetches /config for preview + gift effects
-// - Shows banners for !play, !points, and gifts
-// - Keeps a simple local queue + log
+// client_v2.js – Hog Royale overlay client
 
-// ----------------------------------------------
-// DOM refs
-// ----------------------------------------------
-const queueBannerEl = document.getElementById("queue-banner");
-const queueBannerTextEl = document.getElementById("queue-banner-text");
+const state = {
+  queue: [],
+  points: {}, // { user: number }
+  events: [],
+};
 
-const pointsBannerEl = document.getElementById("points-banner");
-const pointsBannerTextEl = document.getElementById("points-banner-text");
+const els = {};
 
-const giftBannerEl = document.getElementById("gift-banner");
-const giftBannerTextEl = document.getElementById("gift-banner-text");
-
-const queueListEl = document.getElementById("queue-list");
-const eventsLogEl = document.getElementById("events-log");
-const configPreviewEl = document.getElementById("config-preview");
-
-const connDotEl = document.getElementById("conn-status-dot");
-const connTextEl = document.getElementById("conn-status-text");
-
-// ----------------------------------------------
-// Local state
-// ----------------------------------------------
-let queue = [];
-let viewerPoints = {};
-let giftConfig = {};
-let queueBannerTimer = null;
-let pointsBannerTimer = null;
-let giftBannerTimer = null;
-
-// ----------------------------------------------
-// Helpers
-// ----------------------------------------------
-function normaliseUser(payload) {
-  return (
-    payload.user ||
-    payload.username ||
-    payload.nickname ||
-    payload.uniqueId ||
-    "unknown"
-  );
+function $(id) {
+  return document.getElementById(id);
 }
 
-function getTextOrCommand(payload) {
-  return (
-    payload.command ||
-    payload.message ||
-    payload.comment ||
-    payload.text ||
-    ""
-  );
+function initDomRefs() {
+  els.queueList = $("queue-list");
+  els.queueCount = $("queue-count");
+  els.pointsList = $("points-list");
+  els.eventsLog = $("events-log");
+  els.giftList = $("gift-list");
+  els.bannerStack = $("banner-stack");
+  els.connDot = $("connection-dot");
+  els.connText = $("connection-text");
 }
 
-function getGiftName(payload) {
-  return (
-    payload.giftName ||
-    payload.gift ||
-    payload.giftId ||
-    payload.giftType ||
-    ""
-  );
+// Util: time
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-function addEventLogLine(type, user, detail) {
-  const line = document.createElement("div");
-  line.className = "event-line";
-  line.innerHTML = `<span class="event-type">[${type}]</span> <span class="event-user">${user}</span> <span class="event-detail">→ ${detail}</span>`;
-  eventsLogEl.appendChild(line);
+// ------------------------------------------------------
+// Rendering – Queue
+// ------------------------------------------------------
+function renderQueue() {
+  const list = els.queueList;
+  list.innerHTML = "";
 
-  // keep last ~40 lines
-  const max = 40;
-  while (eventsLogEl.children.length > max) {
-    eventsLogEl.removeChild(eventsLogEl.firstChild);
-  }
-
-  eventsLogEl.scrollTop = eventsLogEl.scrollHeight;
-}
-
-function updateQueueList() {
-  queueListEl.innerHTML = "";
-  queue.forEach((u, idx) => {
+  state.queue.forEach((entry, idx) => {
     const li = document.createElement("li");
     li.className = "queue-item";
-    li.innerHTML = `<span class="queue-pos">#${idx + 1}</span><span class="queue-name">${u}</span>`;
-    queueListEl.appendChild(li);
+
+    const pos = document.createElement("div");
+    pos.className = "queue-position";
+    pos.textContent = idx + 1;
+
+    const main = document.createElement("div");
+    const userSpan = document.createElement("div");
+    userSpan.className = "queue-user";
+    userSpan.textContent = entry.user;
+
+    const meta = document.createElement("div");
+    meta.className = "queue-meta";
+    const joinedSpan = document.createElement("span");
+    joinedSpan.textContent = "Joined";
+
+    const timeSpan = document.createElement("span");
+    timeSpan.textContent = formatTime(entry.joinedAt || Date.now());
+
+    meta.appendChild(joinedSpan);
+    meta.appendChild(timeSpan);
+
+    main.appendChild(userSpan);
+    main.appendChild(meta);
+
+    li.appendChild(pos);
+    li.appendChild(main);
+    list.appendChild(li);
   });
+
+  els.queueCount.textContent = `${state.queue.length} waiting`;
 }
 
-function ensureViewerPoints(user) {
-  if (!viewerPoints[user]) viewerPoints[user] = 0;
-  return viewerPoints[user];
-}
+// ------------------------------------------------------
+// Rendering – Points leaderboard
+// ------------------------------------------------------
+function renderPoints() {
+  const list = els.pointsList;
+  list.innerHTML = "";
 
-function adjustPoints(user, delta) {
-  ensureViewerPoints(user);
-  viewerPoints[user] += delta;
-  if (viewerPoints[user] < 0) viewerPoints[user] = 0;
-  return viewerPoints[user];
-}
+  const entries = Object.entries(state.points)
+    .map(([user, pts]) => ({ user, pts }))
+    .sort((a, b) => b.pts - a.pts)
+    .slice(0, 10);
 
-// Show/hide banners with auto-timeout
-function showBanner(el, textEl, text, ms, timerRefName) {
-  textEl.textContent = text;
+  entries.forEach((row, i) => {
+    const li = document.createElement("li");
+    li.className = "points-row";
 
-  // clear existing timer
-  if (timerRefName && window[timerRefName]) {
-    clearTimeout(window[timerRefName]);
-    window[timerRefName] = null;
-  }
+    const left = document.createElement("div");
+    left.className = "points-left";
 
-  el.classList.remove("hidden");
-  el.classList.add("show");
+    const avatar = document.createElement("div");
+    avatar.className = "hog-avatar";
+    avatar.textContent = i === 0 ? "👑" : "🐷";
 
-  if (timerRefName) {
-    window[timerRefName] = setTimeout(() => {
-      el.classList.remove("show");
-      // small delay before hiding to allow fade
-      setTimeout(() => el.classList.add("hidden"), 250);
-    }, ms);
-  }
-}
+    const userSpan = document.createElement("div");
+    userSpan.className = "points-user";
+    userSpan.textContent = row.user;
 
-// ----------------------------------------------
-// Handling specific events
-// ----------------------------------------------
-function handlePlayCommand(user) {
-  if (!queue.includes(user)) {
-    queue.push(user);
-    updateQueueList();
-  }
-  const text = `${user.toUpperCase()} JOINED THE QUEUE`;
-  showBanner(
-    queueBannerEl,
-    queueBannerTextEl,
-    text,
-    3000,
-    "queueBannerTimer"
-  );
-}
+    left.appendChild(avatar);
+    left.appendChild(userSpan);
 
-function handlePointsCommand(user) {
-  const total = ensureViewerPoints(user);
-  const text = `[${user}] You have ${total} Hog Points`;
-  showBanner(
-    pointsBannerEl,
-    pointsBannerTextEl,
-    text,
-    3500,
-    "pointsBannerTimer"
-  );
-}
+    const value = document.createElement("div");
+    value.className = "points-value";
+    value.textContent = `${row.pts} pts`;
 
-function handleGiftEvent(user, payload) {
-  const giftName = getGiftName(payload) || "Mystery Gift";
+    li.appendChild(left);
+    li.appendChild(value);
+    list.appendChild(li);
+  });
 
-  // Try find gift in config for nice label/points
-  const key = String(giftName).toLowerCase();
-  const conf = giftConfig[key] || {};
-  const effect = conf.effect || conf.description || "Boost activated";
-  const points = typeof conf.points === "number" ? conf.points : 5;
-
-  const newTotal = adjustPoints(user, points);
-
-  const text = `${giftName.toUpperCase()} → ${effect}, +${points} points (Total ${newTotal})`;
-  showBanner(giftBannerEl, giftBannerTextEl, text, 4500, "giftBannerTimer");
-}
-
-// ----------------------------------------------
-// Main TikTok event handler
-// ----------------------------------------------
-function handleTikTokPayload(payload) {
-  const user = normaliseUser(payload);
-  const baseType = payload.type || payload.eventType || "chat";
-  const text = getTextOrCommand(payload);
-  const giftName = getGiftName(payload);
-
-  // Log what we saw
-  const detail =
-    baseType === "gift"
-      ? `${giftName || "gift"}`
-      : text || JSON.stringify(payload);
-  addEventLogLine(baseType, user, detail);
-
-  // Command detection from text / command field
-  const lower = (text || "").toLowerCase();
-  const cmd =
-    (payload.command && String(payload.command).toLowerCase()) ||
-    (lower.startsWith("!") ? lower.split(" ")[0] : "");
-
-  if (cmd === "!play") {
-    handlePlayCommand(user);
-  } else if (cmd === "!points") {
-    handlePointsCommand(user);
-  }
-
-  // Gift handling (either from explicit type or if we see giftName)
-  if (baseType === "gift" || giftName) {
-    handleGiftEvent(user, payload);
+  if (entries.length === 0) {
+    const li = document.createElement("li");
+    li.className = "points-row";
+    li.innerHTML =
+      '<div class="points-left"><div class="hog-avatar">🐷</div><div class="points-user">No hogs yet</div></div><div class="points-value">0 pts</div>';
+    list.appendChild(li);
   }
 }
 
-// ----------------------------------------------
-// Server-Sent Events hookup
-// ----------------------------------------------
-function setupEventStream() {
+// ------------------------------------------------------
+// Rendering – Events log
+// ------------------------------------------------------
+function pushEventLog(entry) {
+  state.events.push(entry);
+  if (state.events.length > 50) state.events.shift();
+  renderEvents();
+}
+
+function renderEvents() {
+  const list = els.eventsLog;
+  list.innerHTML = "";
+
+  state.events.slice(-25).forEach((e) => {
+    const li = document.createElement("li");
+    li.className = "event-item";
+
+    const left = document.createElement("div");
+    left.className = "event-left";
+
+    const meta = document.createElement("span");
+    meta.className = "event-meta";
+    meta.textContent = `[${formatTime(e.ts)}] ${e.user || "System"}`;
+
+    const msg = document.createElement("span");
+    msg.textContent = ` ${e.message}`;
+
+    left.appendChild(meta);
+    left.appendChild(msg);
+
+    const tag = document.createElement("span");
+    tag.className = "event-type-tag event-type-" + (e.type || "info");
+    tag.textContent = e.type || "info";
+
+    li.appendChild(left);
+    li.appendChild(tag);
+    list.appendChild(li);
+  });
+
+  list.scrollTop = list.scrollHeight;
+}
+
+// ------------------------------------------------------
+// Rendering – Gift feed
+// ------------------------------------------------------
+function pushGiftItem(payload) {
+  const list = els.giftList;
+
+  const li = document.createElement("li");
+  li.className = "gift-item";
+
+  const main = document.createElement("div");
+  main.className = "gift-main";
+
+  const left = document.createElement("div");
+  left.innerHTML = `<span class="gift-user">${payload.user}</span> sent <span class="gift-name">${payload.gift}</span>`;
+
+  const right = document.createElement("div");
+  right.className = "gift-points";
+  right.textContent = `+${payload.addedPoints} pts`;
+
+  main.appendChild(left);
+  main.appendChild(right);
+
+  const meta = document.createElement("div");
+  meta.className = "gift-meta";
+  meta.textContent = `Total: ${payload.totalPoints} pts • ${payload.diamonds} diamonds`;
+
+  li.appendChild(main);
+  li.appendChild(meta);
+
+  list.appendChild(li);
+
+  // Limit length
+  while (list.children.length > 15) {
+    list.removeChild(list.firstChild);
+  }
+
+  list.scrollTop = list.scrollHeight;
+}
+
+// ------------------------------------------------------
+// Banners
+// ------------------------------------------------------
+function showBanner(kind, payload) {
+  // kind: "play" | "points" | "gift"
+  const stack = els.bannerStack;
+  const banner = document.createElement("div");
+  banner.className = "banner";
+
+  if (kind === "play") banner.classList.add("banner-type-play");
+  if (kind === "points") banner.classList.add("banner-type-points");
+  if (kind === "gift") banner.classList.add("banner-type-gift");
+
+  const left = document.createElement("div");
+  left.className = "banner-left";
+
+  const icon = document.createElement("div");
+  icon.className = "banner-icon";
+
+  if (kind === "play") icon.textContent = "🎮";
+  else if (kind === "points") icon.textContent = "📊";
+  else if (kind === "gift") icon.textContent = "🎁";
+  else icon.textContent = "🐷";
+
+  const textBox = document.createElement("div");
+
+  const userSpan = document.createElement("div");
+  userSpan.className = "banner-user";
+  userSpan.textContent = payload.user || "Hog";
+
+  const textSpan = document.createElement("div");
+  textSpan.className = "banner-text";
+  textSpan.textContent = payload.message || "";
+
+  textBox.appendChild(userSpan);
+  textBox.appendChild(textSpan);
+
+  left.appendChild(icon);
+  left.appendChild(textBox);
+
+  banner.appendChild(left);
+  stack.innerHTML = "";
+  stack.appendChild(banner);
+
+  // Auto fade out
+  setTimeout(() => {
+    banner.style.animation = "banner-fade-out 0.4s ease-in forwards";
+    setTimeout(() => {
+      if (banner.parentElement === stack) {
+        stack.removeChild(banner);
+      }
+    }, 450);
+  }, 2800);
+}
+
+// ------------------------------------------------------
+// SSE connection
+// ------------------------------------------------------
+function setConnectionState(online) {
+  if (!els.connDot || !els.connText) return;
+  els.connDot.classList.toggle("online", online);
+  els.connDot.classList.toggle("offline", !online);
+  els.connText.textContent = online ? "Connected" : "Disconnected";
+}
+
+function handleSnapshot(payload) {
+  state.queue = Array.isArray(payload.queue) ? payload.queue : [];
+  state.points = payload.points || {};
+  state.events = payload.recentEvents || [];
+
+  renderQueue();
+  renderPoints();
+  renderEvents();
+}
+
+function handleEventMessage(msg) {
+  const { type, payload } = msg;
+
+  if (type === "snapshot") {
+    handleSnapshot(payload);
+    return;
+  }
+
+  if (type === "queue_join") {
+    // Update queue: append if not already there
+    if (!state.queue.find((p) => p.user.toLowerCase() === payload.user.toLowerCase())) {
+      state.queue.push({ user: payload.user, joinedAt: Date.now() });
+    }
+    renderQueue();
+    showBanner("play", payload);
+    pushEventLog({
+      ts: Date.now(),
+      type: "queue_join",
+      user: payload.user,
+      message: payload.message,
+    });
+  } else if (type === "points_check") {
+    state.points[payload.user] = payload.points;
+    renderPoints();
+    showBanner("points", payload);
+    pushEventLog({
+      ts: Date.now(),
+      type: "points_check",
+      user: payload.user,
+      message: payload.message,
+    });
+  } else if (type === "gift") {
+    state.points[payload.user] = payload.totalPoints;
+    renderPoints();
+    showBanner("gift", payload);
+    pushGiftItem(payload);
+    pushEventLog({
+      ts: Date.now(),
+      type: "gift",
+      user: payload.user,
+      message: payload.message,
+    });
+  } else if (type === "event_log_update") {
+    if (payload.entry) {
+      pushEventLog(payload.entry);
+    }
+  } else if (type === "events_list") {
+    // Replace events for !events command
+    if (Array.isArray(payload.events)) {
+      state.events = payload.events;
+      renderEvents();
+    }
+  } else if (type === "chat") {
+    // Just log simple chat
+    pushEventLog({
+      ts: Date.now(),
+      type: "chat",
+      user: payload.user,
+      message: payload.message,
+    });
+  } else if (type === "info") {
+    pushEventLog({
+      ts: Date.now(),
+      type: "info",
+      user: payload.user,
+      message: payload.message,
+    });
+  }
+}
+
+// ------------------------------------------------------
+// Init
+// ------------------------------------------------------
+window.addEventListener("DOMContentLoaded", () => {
+  initDomRefs();
+
   const es = new EventSource("/events");
 
-  es.addEventListener("open", () => {
-    connDotEl.classList.remove("offline");
-    connDotEl.classList.add("online");
-    connTextEl.textContent = "Connected ✓";
-  });
+  es.onopen = () => {
+    setConnectionState(true);
+  };
 
-  es.addEventListener("error", () => {
-    connDotEl.classList.remove("online");
-    connDotEl.classList.add("offline");
-    connTextEl.textContent = "Reconnecting…";
-  });
+  es.onerror = () => {
+    setConnectionState(false);
+  };
 
-  // Our server sends events with name "tiktok"
-  es.addEventListener("tiktok", (event) => {
+  es.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
-      if (data && data.payload) {
-        handleTikTokPayload(data.payload);
-      }
+      handleEventMessage(data);
     } catch (err) {
-      console.error("Error parsing SSE data:", err, event.data);
+      console.error("Bad SSE payload", err, event.data);
     }
-  });
-}
-
-// ----------------------------------------------
-// Config fetch
-// ----------------------------------------------
-async function loadConfigPreview() {
-  try {
-    const res = await fetch("/config");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const cfg = await res.json();
-
-    // store gift config in a simple lookup (keyed by lowercased gift name)
-    if (cfg.giftPowerups && Array.isArray(cfg.giftPowerups)) {
-      const map = {};
-      for (const g of cfg.giftPowerups) {
-        const name = (g.name || g.id || "").toLowerCase();
-        if (!name) continue;
-        map[name] = g;
-      }
-      giftConfig = map;
-    }
-
-    const preview = {
-      mapsCount: cfg.maps?.maps?.length ?? 0,
-      hogClassesCount: cfg.hogClasses?.classes?.length ?? 0,
-      commandsCount: cfg.commandsConfig?.commands?.length ?? 0,
-      giftPowerupsCount: cfg.giftPowerups?.length ?? 0,
-    };
-
-    configPreviewEl.textContent = JSON.stringify(preview, null, 2);
-  } catch (err) {
-    console.error("Failed to load /config:", err);
-    configPreviewEl.textContent = "Failed to load config.";
-  }
-}
-
-// ----------------------------------------------
-// Init
-// ----------------------------------------------
-window.addEventListener("DOMContentLoaded", () => {
-  setupEventStream();
-  loadConfigPreview();
+  };
 });

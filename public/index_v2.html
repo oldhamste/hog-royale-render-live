@@ -2,62 +2,78 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Hog Royale – Live Overlay</title>
+  <title>Hog Royale Overlay</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Optional: nicer font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="/style_v2.css" />
 </head>
 <body>
   <div id="overlay-root">
-    <div class="top-bar">
-      <div class="logo-title">
-        <span class="logo-dot"></span>
-        <span class="title-main">Hog Royale</span>
-        <span class="title-sub">Live Events Overlay</span>
-      </div>
-      <div class="connection-indicator">
-        <span id="conn-status-dot" class="status-dot offline"></span>
-        <span id="conn-status-text">Connecting…</span>
+    <!-- Top event banner -->
+    <div id="banner" class="banner hidden">
+      <div class="banner-glow"></div>
+      <div class="banner-inner">
+        <div class="banner-tag">HOG ROYALE</div>
+        <div id="banner-text" class="banner-text">Welcome to Hog Royale</div>
       </div>
     </div>
 
-    <!-- BIG BANNERS -->
-    <div id="queue-banner" class="banner banner-queue hidden">
-      <div class="banner-label">QUEUE</div>
-      <div class="banner-text" id="queue-banner-text">BAZ JOINED THE QUEUE</div>
-    </div>
+    <!-- Main grid layout -->
+    <div class="layout">
+      <!-- LEFT: Queue panel -->
+      <section id="queue-panel" class="panel panel-queue">
+        <header class="panel-header">
+          <div class="panel-title">Queue</div>
+          <div class="panel-subtitle">Type <span class="cmd">!play</span> to join</div>
+        </header>
+        <div class="panel-body">
+          <ul id="queue-list" class="list queue-list">
+            <!-- Filled by client_v2.js -->
+          </ul>
+          <div class="panel-footer">
+            <span class="hint">Auto-updated from TikTok chat</span>
+          </div>
+        </div>
+      </section>
 
-    <div id="points-banner" class="banner banner-points hidden">
-      <div class="banner-label">POINTS</div>
-      <div class="banner-text" id="points-banner-text">[BAZ] You have 120 Hog Points</div>
-    </div>
+      <!-- RIGHT: Points + Events stacked -->
+      <div class="right-column">
+        <!-- Hog Points leaderboard -->
+        <section id="points-panel" class="panel panel-points">
+          <header class="panel-header">
+            <div class="panel-title">Hog Points</div>
+            <div class="panel-subtitle">
+              <span class="cmd">!points</span> to check balance
+            </div>
+          </header>
+          <div class="panel-body">
+            <ul id="points-list" class="list points-list">
+              <!-- Filled by client_v2.js -->
+            </ul>
+          </div>
+        </section>
 
-    <div id="gift-banner" class="banner banner-gift hidden">
-      <div class="banner-label">GIFT POWER</div>
-      <div class="banner-text" id="gift-banner-text">ROSE → Small explosion, +5 armour</div>
-    </div>
-
-    <!-- LEFT: QUEUE LIST -->
-    <div class="panel panel-queue">
-      <div class="panel-header">Race Queue</div>
-      <ul id="queue-list" class="queue-list">
-        <!-- filled by JS -->
-      </ul>
-    </div>
-
-    <!-- RIGHT: RECENT EVENTS -->
-    <div class="panel panel-events">
-      <div class="panel-header">Recent TikTok Events</div>
-      <div id="events-log" class="events-log">
-        <!-- filled by JS -->
+        <!-- Live events log -->
+        <section id="events-panel" class="panel panel-events">
+          <header class="panel-header">
+            <div class="panel-title">Live Events</div>
+            <div class="panel-subtitle">Commands · Gifts · Subs</div>
+          </header>
+          <div class="panel-body events-body">
+            <div id="events-log" class="events-log">
+              <!-- Filled by client_v2.js -->
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
-
-    <!-- BOTTOM LEFT: CONFIG STATUS -->
-    <div class="panel panel-config">
-      <div class="panel-header">Config Loaded</div>
-      <pre id="config-preview" class="config-preview">
-Loading config…
-      </pre>
     </div>
   </div>
 
