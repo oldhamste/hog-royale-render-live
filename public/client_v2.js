@@ -1,153 +1,278 @@
-// client_v2.js – overlay logic
+// Hog Royale Overlay v2 client
+// - Connects to /events (SSE) for TikTok events
+// - Fetches /config for preview + gift effects
+// - Shows banners for !play, !points, and gifts
+// - Keeps a simple local queue + log
 
-const socket = io();
+// ----------------------------------------------
+// DOM refs
+// ----------------------------------------------
+const queueBannerEl = document.getElementById("queue-banner");
+const queueBannerTextEl = document.getElementById("queue-banner-text");
 
-const eventsListEl = document.getElementById("events-list");
+const pointsBannerEl = document.getElementById("points-banner");
+const pointsBannerTextEl = document.getElementById("points-banner-text");
+
+const giftBannerEl = document.getElementById("gift-banner");
+const giftBannerTextEl = document.getElementById("gift-banner-text");
+
 const queueListEl = document.getElementById("queue-list");
-const queueEmptyEl = document.getElementById("queue-empty");
-const commandsListEl = document.getElementById("commands-list");
-const mapInfoEl = document.getElementById("map-info");
-const popupContainerEl = document.getElementById("popup-container");
-const triggerTestBtn = document.getElementById("trigger-test");
+const eventsLogEl = document.getElementById("events-log");
+const configPreviewEl = document.getElementById("config-preview");
 
-const queuedUsers = new Set();
+const connDotEl = document.getElementById("conn-status-dot");
+const connTextEl = document.getElementById("conn-status-text");
 
-// Load combined config
-async function loadConfig() {
+// ----------------------------------------------
+// Local state
+// ----------------------------------------------
+let queue = [];
+let viewerPoints = {};
+let giftConfig = {};
+let queueBannerTimer = null;
+let pointsBannerTimer = null;
+let giftBannerTimer = null;
+
+// ----------------------------------------------
+// Helpers
+// ----------------------------------------------
+function normaliseUser(payload) {
+  return (
+    payload.user ||
+    payload.username ||
+    payload.nickname ||
+    payload.uniqueId ||
+    "unknown"
+  );
+}
+
+function getTextOrCommand(payload) {
+  return (
+    payload.command ||
+    payload.message ||
+    payload.comment ||
+    payload.text ||
+    ""
+  );
+}
+
+function getGiftName(payload) {
+  return (
+    payload.giftName ||
+    payload.gift ||
+    payload.giftId ||
+    payload.giftType ||
+    ""
+  );
+}
+
+function addEventLogLine(type, user, detail) {
+  const line = document.createElement("div");
+  line.className = "event-line";
+  line.innerHTML = `<span class="event-type">[${type}]</span> <span class="event-user">${user}</span> <span class="event-detail">→ ${detail}</span>`;
+  eventsLogEl.appendChild(line);
+
+  // keep last ~40 lines
+  const max = 40;
+  while (eventsLogEl.children.length > max) {
+    eventsLogEl.removeChild(eventsLogEl.firstChild);
+  }
+
+  eventsLogEl.scrollTop = eventsLogEl.scrollHeight;
+}
+
+function updateQueueList() {
+  queueListEl.innerHTML = "";
+  queue.forEach((u, idx) => {
+    const li = document.createElement("li");
+    li.className = "queue-item";
+    li.innerHTML = `<span class="queue-pos">#${idx + 1}</span><span class="queue-name">${u}</span>`;
+    queueListEl.appendChild(li);
+  });
+}
+
+function ensureViewerPoints(user) {
+  if (!viewerPoints[user]) viewerPoints[user] = 0;
+  return viewerPoints[user];
+}
+
+function adjustPoints(user, delta) {
+  ensureViewerPoints(user);
+  viewerPoints[user] += delta;
+  if (viewerPoints[user] < 0) viewerPoints[user] = 0;
+  return viewerPoints[user];
+}
+
+// Show/hide banners with auto-timeout
+function showBanner(el, textEl, text, ms, timerRefName) {
+  textEl.textContent = text;
+
+  // clear existing timer
+  if (timerRefName && window[timerRefName]) {
+    clearTimeout(window[timerRefName]);
+    window[timerRefName] = null;
+  }
+
+  el.classList.remove("hidden");
+  el.classList.add("show");
+
+  if (timerRefName) {
+    window[timerRefName] = setTimeout(() => {
+      el.classList.remove("show");
+      // small delay before hiding to allow fade
+      setTimeout(() => el.classList.add("hidden"), 250);
+    }, ms);
+  }
+}
+
+// ----------------------------------------------
+// Handling specific events
+// ----------------------------------------------
+function handlePlayCommand(user) {
+  if (!queue.includes(user)) {
+    queue.push(user);
+    updateQueueList();
+  }
+  const text = `${user.toUpperCase()} JOINED THE QUEUE`;
+  showBanner(
+    queueBannerEl,
+    queueBannerTextEl,
+    text,
+    3000,
+    "queueBannerTimer"
+  );
+}
+
+function handlePointsCommand(user) {
+  const total = ensureViewerPoints(user);
+  const text = `[${user}] You have ${total} Hog Points`;
+  showBanner(
+    pointsBannerEl,
+    pointsBannerTextEl,
+    text,
+    3500,
+    "pointsBannerTimer"
+  );
+}
+
+function handleGiftEvent(user, payload) {
+  const giftName = getGiftName(payload) || "Mystery Gift";
+
+  // Try find gift in config for nice label/points
+  const key = String(giftName).toLowerCase();
+  const conf = giftConfig[key] || {};
+  const effect = conf.effect || conf.description || "Boost activated";
+  const points = typeof conf.points === "number" ? conf.points : 5;
+
+  const newTotal = adjustPoints(user, points);
+
+  const text = `${giftName.toUpperCase()} → ${effect}, +${points} points (Total ${newTotal})`;
+  showBanner(giftBannerEl, giftBannerTextEl, text, 4500, "giftBannerTimer");
+}
+
+// ----------------------------------------------
+// Main TikTok event handler
+// ----------------------------------------------
+function handleTikTokPayload(payload) {
+  const user = normaliseUser(payload);
+  const baseType = payload.type || payload.eventType || "chat";
+  const text = getTextOrCommand(payload);
+  const giftName = getGiftName(payload);
+
+  // Log what we saw
+  const detail =
+    baseType === "gift"
+      ? `${giftName || "gift"}`
+      : text || JSON.stringify(payload);
+  addEventLogLine(baseType, user, detail);
+
+  // Command detection from text / command field
+  const lower = (text || "").toLowerCase();
+  const cmd =
+    (payload.command && String(payload.command).toLowerCase()) ||
+    (lower.startsWith("!") ? lower.split(" ")[0] : "");
+
+  if (cmd === "!play") {
+    handlePlayCommand(user);
+  } else if (cmd === "!points") {
+    handlePointsCommand(user);
+  }
+
+  // Gift handling (either from explicit type or if we see giftName)
+  if (baseType === "gift" || giftName) {
+    handleGiftEvent(user, payload);
+  }
+}
+
+// ----------------------------------------------
+// Server-Sent Events hookup
+// ----------------------------------------------
+function setupEventStream() {
+  const es = new EventSource("/events");
+
+  es.addEventListener("open", () => {
+    connDotEl.classList.remove("offline");
+    connDotEl.classList.add("online");
+    connTextEl.textContent = "Connected ✓";
+  });
+
+  es.addEventListener("error", () => {
+    connDotEl.classList.remove("online");
+    connDotEl.classList.add("offline");
+    connTextEl.textContent = "Reconnecting…";
+  });
+
+  // Our server sends events with name "tiktok"
+  es.addEventListener("tiktok", (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data && data.payload) {
+        handleTikTokPayload(data.payload);
+      }
+    } catch (err) {
+      console.error("Error parsing SSE data:", err, event.data);
+    }
+  });
+}
+
+// ----------------------------------------------
+// Config fetch
+// ----------------------------------------------
+async function loadConfigPreview() {
   try {
     const res = await fetch("/config");
-    const data = await res.json();
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const cfg = await res.json();
 
-    // Commands
-    commandsListEl.innerHTML = "";
-    if (data.commandsConfig?.commands) {
-      data.commandsConfig.commands.forEach((cmd) => {
-        const li = document.createElement("li");
-
-        const syntax = document.createElement("span");
-        syntax.className = "command-syntax";
-        syntax.textContent = cmd.syntax;
-
-        const desc = document.createElement("span");
-        desc.textContent = cmd.description || "";
-
-        li.appendChild(syntax);
-        li.appendChild(desc);
-        commandsListEl.appendChild(li);
-      });
+    // store gift config in a simple lookup (keyed by lowercased gift name)
+    if (cfg.giftPowerups && Array.isArray(cfg.giftPowerups)) {
+      const map = {};
+      for (const g of cfg.giftPowerups) {
+        const name = (g.name || g.id || "").toLowerCase();
+        if (!name) continue;
+        map[name] = g;
+      }
+      giftConfig = map;
     }
 
-    // Maps
-    if (data.maps?.maps) {
-      const names = data.maps.maps.map((m) => m.name).join(" • ");
-      mapInfoEl.textContent = `${data.maps.maps.length} maps: ${names}`;
-    }
+    const preview = {
+      mapsCount: cfg.maps?.maps?.length ?? 0,
+      hogClassesCount: cfg.hogClasses?.classes?.length ?? 0,
+      commandsCount: cfg.commandsConfig?.commands?.length ?? 0,
+      giftPowerupsCount: cfg.giftPowerups?.length ?? 0,
+    };
+
+    configPreviewEl.textContent = JSON.stringify(preview, null, 2);
   } catch (err) {
-    console.error("Error loading config", err);
-    mapInfoEl.textContent = "Error loading config";
+    console.error("Failed to load /config:", err);
+    configPreviewEl.textContent = "Failed to load config.";
   }
 }
 
-loadConfig();
-
-// Handle events from backend
-socket.on("tiktok_event", (event) => {
-  addEventRow(event);
-
-  if (event.kind === "command") handleCommand(event);
-  if (event.kind === "gift") handleGift(event);
+// ----------------------------------------------
+// Init
+// ----------------------------------------------
+window.addEventListener("DOMContentLoaded", () => {
+  setupEventStream();
+  loadConfigPreview();
 });
-
-function addEventRow(event) {
-  const row = document.createElement("div");
-  row.className = "event-row";
-
-  const kind = document.createElement("span");
-  kind.className = "event-kind " + event.kind;
-  kind.textContent = event.kind.toUpperCase();
-
-  const user = document.createElement("span");
-  user.textContent = event.user || "unknown";
-
-  const msg = document.createElement("span");
-  msg.textContent = event.message || event.comment || JSON.stringify(event);
-
-  row.appendChild(kind);
-  row.appendChild(user);
-  row.appendChild(msg);
-
-  eventsListEl.appendChild(row);
-  eventsListEl.scrollTop = eventsListEl.scrollHeight;
-}
-
-function handleCommand(event) {
-  const user = event.user || "unknown";
-
-  if (event.subType === "queue_join") {
-    queuedUsers.add(user);
-    refreshQueue();
-    popup(`${user} JOINED THE QUEUE`, "queue");
-  }
-
-  if (event.subType === "queue_leave") {
-    queuedUsers.delete(user);
-    refreshQueue();
-  }
-
-  if (event.subType === "points") {
-    popup(`[${user}] You have ${event.points} Hog Points`, "points");
-  }
-}
-
-function handleGift(event) {
-  const giftName = event.gift || "Gift";
-  popup(`${event.user} → ${giftName.toUpperCase()} (+${event.pointsAdded} pts)`, "gift");
-}
-
-function refreshQueue() {
-  queueListEl.innerHTML = "";
-
-  if (queuedUsers.size === 0) {
-    queueEmptyEl.style.display = "block";
-    return;
-  }
-
-  queueEmptyEl.style.display = "none";
-
-  for (const user of queuedUsers) {
-    const li = document.createElement("li");
-    li.className = "tag";
-    li.textContent = user;
-    queueListEl.appendChild(li);
-  }
-}
-
-// Popup helper
-function popup(text, type) {
-  const box = document.createElement("div");
-  box.className = `popup ${type}`;
-
-  const title = document.createElement("div");
-  title.className = "popup-title";
-  title.textContent =
-    type === "queue" ? "QUEUE" :
-    type === "points" ? "POINTS" :
-    type === "gift" ? "GIFT POWER" :
-    "EVENT";
-
-  const body = document.createElement("div");
-  body.textContent = text;
-
-  box.appendChild(title);
-  box.appendChild(body);
-  popupContainerEl.appendChild(box);
-
-  setTimeout(() => box.remove(), 4500);
-}
-
-// Test button
-if (triggerTestBtn) {
-  triggerTestBtn.onclick = () => {
-    fetch("/test-event", { method: "POST" });
-  };
-}

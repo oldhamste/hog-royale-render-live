@@ -2,48 +2,65 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Hog Royale – Live Control</title>
+  <title>Hog Royale – Live Overlay</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/style_v2.css" />
 </head>
 <body>
-  <div id="app-container">
-    <!-- LEFT PANEL -->
-    <div id="left-panel">
-      <h1 class="title">🐗 Hog Royale – Live Control</h1>
-
-      <section class="block">
-        <h2>Commands</h2>
-        <ul id="commands-list"></ul>
-      </section>
-
-      <section class="block">
-        <h2>Map Rotation</h2>
-        <div id="map-info">Loading...</div>
-      </section>
-
-      <button id="trigger-test" class="test-btn">Trigger Test Event</button>
+  <div id="overlay-root">
+    <div class="top-bar">
+      <div class="logo-title">
+        <span class="logo-dot"></span>
+        <span class="title-main">Hog Royale</span>
+        <span class="title-sub">Live Events Overlay</span>
+      </div>
+      <div class="connection-indicator">
+        <span id="conn-status-dot" class="status-dot offline"></span>
+        <span id="conn-status-text">Connecting…</span>
+      </div>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div id="right-panel">
-      <section class="block">
-        <h2>Queue for Next Match</h2>
-        <div id="queue-empty">Queue empty</div>
-        <ul id="queue-list"></ul>
-      </section>
+    <!-- BIG BANNERS -->
+    <div id="queue-banner" class="banner banner-queue hidden">
+      <div class="banner-label">QUEUE</div>
+      <div class="banner-text" id="queue-banner-text">BAZ JOINED THE QUEUE</div>
+    </div>
 
-      <section class="block">
-        <h2>Live Events</h2>
-        <div id="events-list"></div>
-      </section>
+    <div id="points-banner" class="banner banner-points hidden">
+      <div class="banner-label">POINTS</div>
+      <div class="banner-text" id="points-banner-text">[BAZ] You have 120 Hog Points</div>
+    </div>
+
+    <div id="gift-banner" class="banner banner-gift hidden">
+      <div class="banner-label">GIFT POWER</div>
+      <div class="banner-text" id="gift-banner-text">ROSE → Small explosion, +5 armour</div>
+    </div>
+
+    <!-- LEFT: QUEUE LIST -->
+    <div class="panel panel-queue">
+      <div class="panel-header">Race Queue</div>
+      <ul id="queue-list" class="queue-list">
+        <!-- filled by JS -->
+      </ul>
+    </div>
+
+    <!-- RIGHT: RECENT EVENTS -->
+    <div class="panel panel-events">
+      <div class="panel-header">Recent TikTok Events</div>
+      <div id="events-log" class="events-log">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- BOTTOM LEFT: CONFIG STATUS -->
+    <div class="panel panel-config">
+      <div class="panel-header">Config Loaded</div>
+      <pre id="config-preview" class="config-preview">
+Loading config…
+      </pre>
     </div>
   </div>
 
-  <!-- Popups -->
-  <div id="popup-container"></div>
-
-  <script src="/socket.io/socket.io.js"></script>
   <script src="/client_v2.js"></script>
 </body>
 </html>
