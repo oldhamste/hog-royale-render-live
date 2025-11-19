@@ -1,82 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Hog Royale Overlay</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Optional: nicer font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
-    rel="stylesheet"
-  />
-
-  <link rel="stylesheet" href="/style_v2.css" />
-</head>
-<body>
-  <div id="overlay-root">
-    <!-- Top event banner -->
-    <div id="banner" class="banner hidden">
-      <div class="banner-glow"></div>
-      <div class="banner-inner">
-        <div class="banner-tag">HOG ROYALE</div>
-        <div id="banner-text" class="banner-text">Welcome to Hog Royale</div>
-      </div>
-    </div>
-
-    <!-- Main grid layout -->
-    <div class="layout">
-      <!-- LEFT: Queue panel -->
-      <section id="queue-panel" class="panel panel-queue">
-        <header class="panel-header">
-          <div class="panel-title">Queue</div>
-          <div class="panel-subtitle">Type <span class="cmd">!play</span> to join</div>
-        </header>
-        <div class="panel-body">
-          <ul id="queue-list" class="list queue-list">
-            <!-- Filled by client_v2.js -->
-          </ul>
-          <div class="panel-footer">
-            <span class="hint">Auto-updated from TikTok chat</span>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hog Royale – Live Events Overlay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/public/style_v2.css" />
+  </head>
+  <body>
+    <div class="overlay-root">
+      <!-- HEADER -->
+      <header class="overlay-header">
+        <div class="brand">
+          <div class="brand-icon">🐷</div>
+          <div class="brand-text">
+            <h1>HOG ROYALE</h1>
+            <span>Live Events Overlay</span>
           </div>
         </div>
-      </section>
 
-      <!-- RIGHT: Points + Events stacked -->
-      <div class="right-column">
-        <!-- Hog Points leaderboard -->
-        <section id="points-panel" class="panel panel-points">
-          <header class="panel-header">
-            <div class="panel-title">Hog Points</div>
-            <div class="panel-subtitle">
-              <span class="cmd">!points</span> to check balance
+        <div class="connection-pill">
+          <span id="connection-dot" class="status-dot offline"></span>
+          <span id="connection-text" class="status-label">Disconnected</span>
+        </div>
+      </header>
+
+      <!-- MAIN GRID -->
+      <main class="overlay-main">
+        <!-- HOG QUEUE -->
+        <section class="panel panel-queue">
+          <div class="panel-header">
+            <h2>Hog Queue</h2>
+            <span id="queue-count" class="pill">0 waiting</span>
+          </div>
+          <ul id="queue-list" class="list list-queue">
+            <li class="empty-hint">
+              No hogs in the queue yet. Type
+              <span class="cmd">!play</span>
+              in chat to join.
+            </li>
+          </ul>
+        </section>
+
+        <!-- TOP HOGS / POINTS -->
+        <section class="panel panel-leaderboard">
+          <div class="panel-header">
+            <h2>Top Hogs</h2>
+          </div>
+          <ul id="points-list" class="list list-points">
+            <li class="empty-hint">
+              No points yet. Gifts & wins will put hogs up here.
+            </li>
+          </ul>
+        </section>
+
+        <!-- RIGHT SIDE COLUMN -->
+        <section class="side-column">
+          <div class="panel panel-events">
+            <div class="panel-header">
+              <h2>Recent TikTok Events</h2>
             </div>
-          </header>
-          <div class="panel-body">
-            <ul id="points-list" class="list points-list">
-              <!-- Filled by client_v2.js -->
+            <ul id="events-log" class="list list-events">
+              <li class="empty-hint">
+                Chat, commands and events will appear here.
+              </li>
             </ul>
           </div>
-        </section>
 
-        <!-- Live events log -->
-        <section id="events-panel" class="panel panel-events">
-          <header class="panel-header">
-            <div class="panel-title">Live Events</div>
-            <div class="panel-subtitle">Commands · Gifts · Subs</div>
-          </header>
-          <div class="panel-body events-body">
-            <div id="events-log" class="events-log">
-              <!-- Filled by client_v2.js -->
+          <div class="panel panel-gifts">
+            <div class="panel-header">
+              <h2>Gift Feed</h2>
             </div>
+            <ul id="gift-list" class="list list-gifts">
+              <li class="empty-hint">
+                Send a <span class="highlight">Rose</span> or bigger to pop up
+                here.
+              </li>
+            </ul>
           </div>
-        </section>
-      </div>
-    </div>
-  </div>
 
-  <script src="/client_v2.js"></script>
-</body>
+          <!-- BANNERS (joins, points, gifts) -->
+          <div id="banner-stack" class="banner-stack"></div>
+        </section>
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="overlay-footer">
+        <div class="footer-left">
+          <span class="label">Chat commands</span>
+          <span class="cmd">!play</span>
+          <span class="cmd">!points</span>
+          <span class="cmd">!events</span>
+          <span class="cmd">!sub</span>
+        </div>
+
+        <div class="panel panel-config">
+          <div class="panel-header small">
+            <h2>Config Loaded</h2>
+          </div>
+          <pre id="config-json" class="config-json"></pre>
+        </div>
+      </footer>
+    </div>
+
+    <script src="/public/client_v2.js" defer></script>
+  </body>
 </html>
