@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hog Royale – Live Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="/style_v2.css">
+
+</head>
+<body>
+
+<div id="app-container">
+
+    <!-- LEFT PANEL -->
+    <div id="left-panel">
+
+        <h1 class="title">🐗 Hog Royale – Live Control</h1>
+
+        <section class="block">
+            <h2>Commands</h2>
+            <ul id="commands-list"></ul>
+        </section>
+
+        <section class="block">
+            <h2>Map Rotation</h2>
+            <div id="map-info">Loading...</div>
+        </section>
+
+        <button id="trigger-test" class="test-btn">Trigger Test Event</button>
+
+    </div>
+
+
+    <!-- RIGHT PANEL -->
+    <div id="right-panel">
+
+        <section class="block">
+            <h2>Queue for Next Match</h2>
+            <div id="queue-empty">Queue empty</div>
+            <ul id="queue-list"></ul>
+        </section>
+
+        <section class="block">
+            <h2>Live Events</h2>
+            <div id="events-list" class="scroll"></div>
+        </section>
+
+    </div>
+
+</div>
+
+<!-- Popup container -->
+<div id="popup-container"></div>
+
+<!-- Socket.IO -->
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- Our client logic -->
+<script src="/client_v2.js"></script>
+
+</body>
+</html>

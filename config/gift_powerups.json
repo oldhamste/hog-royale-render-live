@@ -1,34 +1,27 @@
 {
-  "common": [
-    {
-      "gift": "Rose",
-      "effect": "Small explosion, pushback, +5 armour"
-    },
-    {
-      "gift": "Any_1_Coin",
-      "effect": "+10% damage 5s, glow, AI voice"
-    }
-  ],
-  "big": [
-    {
-      "gift": "GG/HandHeart/Perfume/Cap",
-      "effect": "Teleport to safe zone, +50% HP, shockwave"
-    },
-    {
-      "gift": "Lion/SportsCar/Superpower",
-      "effect": "Full-health respawn, max armour, special weapon, camera focus"
-    }
-  ],
-  "massive": [
-    {
-      "gift": "TreasureBox/Castle/Rocket",
-      "effect": "Full-map airstrike, sender immune 5s, camera shake"
-    }
-  ],
-  "ultra": [
-    {
-      "gift": "Universe",
-      "effect": "Arena wipe, sender survives, 10s chaos mode"
-    }
-  ]
+  "Rose": {
+    "effectText": "Small explosion, pushback, +5 armour",
+    "points": 5,
+    "tag": "small_explosion"
+  },
+  "Perfume": {
+    "effectText": "Stinky smokescreen, nearby hogs slowed",
+    "points": 10,
+    "tag": "smoke"
+  },
+  "Money Gun": {
+    "effectText": "Cash rain – +25 points and speed boost",
+    "points": 25,
+    "tag": "speed_boost"
+  },
+  "TikTok Universe": {
+    "effectText": "Galaxy nuke – map wipe, all hogs respawn",
+    "points": 250,
+    "tag": "map_wipe"
+  },
+  "default": {
+    "effectText": "Mysterious power surge",
+    "points": 5,
+    "tag": "generic"
+  }
 }
